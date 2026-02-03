@@ -1556,6 +1556,10 @@ window.windowResized = function() {
 };
 
 window.addSpawner = function() {
+    if (spawners.length >= 5) {
+        alert("MAXIMUM 5 SPAWNERS ALLOWED");
+        return;
+    }
     let spawnX = width / 2;
     let spawnY = height / 2;
     
