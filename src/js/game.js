@@ -41,7 +41,8 @@ window.saveHistory = function() {
             shape: b.shape,
             instrument: b.instrument,
             curvatureTop: b.curvatureTop || 0,
-            curvatureBottom: b.curvatureBottom || 0
+            curvatureBottom: b.curvatureBottom || 0,
+            maxHits: b.maxHits || 0
         }))
     };
     
@@ -83,6 +84,7 @@ function applyHistoryState(state) {
     // Rebuild
     state.bars.forEach(b => {
         const wall = new Wall(world, Matter, b.x, b.y, b.w, b.h, b.angle, b.note, b.shape, b.instrument, b.curvatureTop, b.curvatureBottom);
+        wall.maxHits = b.maxHits || 0;
         bars.push(wall);
     });
     
@@ -1002,6 +1004,12 @@ window.syncControls = function() {
             if (ctInput) ctInput.value = primary.curvatureTop;
             if (cbInput) cbInput.value = primary.curvatureBottom;
             
+            const mhInput = document.getElementById('bar-max-hits');
+            if (mhInput) {
+                mhInput.closest('.control').style.display = isMulti ? 'none' : 'block';
+                mhInput.value = primary.maxHits || 0;
+            }
+            
             // Signal Wall.js whether to show handles
             bars.forEach(b => {
                 b.hideHandles = isMulti;
@@ -1013,6 +1021,13 @@ window.syncControls = function() {
 window.updateBarInstrument = function(v) {
     if (focusedBar) {
         focusedBar.instrument = v;
+        window.saveHistory();
+    }
+};
+
+window.updateBarMaxHits = function(v) {
+    if (focusedBar) {
+        focusedBar.maxHits = parseInt(v) || 0;
         window.saveHistory();
     }
 };
@@ -1787,6 +1802,7 @@ window.keyPressed = function() {
                 instrument: b.instrument,
                 curvatureTop: b.curvatureTop,
                 curvatureBottom: b.curvatureBottom,
+                maxHits: b.maxHits || 0,
                 relX: b.body.position.x - avgX,
                 relY: b.body.position.y - avgY
             }));
@@ -1806,6 +1822,7 @@ window.keyPressed = function() {
 
             copiedBars.forEach(cb => {
                 const bar = new Wall(world, Matter, worldMouseX + cb.relX, worldMouseY + cb.relY, cb.w, cb.h, cb.angle, cb.note, cb.shape, cb.instrument, cb.curvatureTop, cb.curvatureBottom);
+                bar.maxHits = cb.maxHits || 0;
                 bars.push(bar);
                 bar.isFocused = true;
                 selectedBars.push(bar);
@@ -1869,7 +1886,8 @@ window.confirmExport = function() {
             shape: b.shape,
             instrument: b.instrument,
             curvatureTop: b.curvatureTop || 0,
-            curvatureBottom: b.curvatureBottom || 0
+            curvatureBottom: b.curvatureBottom || 0,
+            maxHits: b.maxHits || 0
         }))
     };
     
@@ -1901,7 +1919,8 @@ window.copyToClipboard = function() {
             shape: b.shape,
             instrument: b.instrument,
             curvatureTop: b.curvatureTop || 0,
-            curvatureBottom: b.curvatureBottom || 0
+            curvatureBottom: b.curvatureBottom || 0,
+            maxHits: b.maxHits || 0
         }))
     };
     
@@ -1982,6 +2001,7 @@ window.loadProjectData = function(data) {
                     Number(b.curvatureTop || 0), 
                     Number(b.curvatureBottom || 0)
                 );
+                bar.maxHits = b.maxHits || 0;
                 bars.push(bar);
             });
         }

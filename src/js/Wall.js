@@ -11,6 +11,9 @@ export class Wall {
         this.curvatureBottom = curvatureBottom;
         this.initialAngle = angle || 0; // Store initial angle for seesaw reset
         this.index = null; // Will be set by game.js
+        this.maxHits = 0; // 0 means infinite
+        this.currentHits = 0;
+        this.isVanished = false;
         
         // Universal settings
         this.settings = { 
@@ -159,6 +162,7 @@ export class Wall {
     }
 
     draw(p) {
+        if (this.isVanished) return;
         p.push();
         p.translate(this.body.position.x, this.body.position.y);
         p.rotate(this.body.angle);
@@ -384,6 +388,15 @@ export class Wall {
 
     onHit() {
         this.glow = 1.0;
+        
+        if (this.maxHits > 0 && !this.isVanished) {
+            this.currentHits++;
+            if (this.currentHits >= this.maxHits) {
+                this.isVanished = true;
+                this.hide();
+            }
+        }
+
         // Only set color on first activation
         if (!this.activated) {
             this.activated = true;
@@ -393,10 +406,30 @@ export class Wall {
         }
     }
 
+    hide() {
+        if (this.body) {
+            this.Matter.Composite.remove(this.world, this.body);
+        }
+    }
+
+    show() {
+        if (this.body) {
+            // Check if already in world to avoid duplicates
+            if (!this.Matter.Composite.allBodies(this.world).includes(this.body)) {
+                this.Matter.World.add(this.world, this.body);
+            }
+        }
+    }
+
     reset() {
         this.activated = false;
         this.settings.color = '#444444';
         this.glow = 0;
+        this.currentHits = 0;
+        if (this.isVanished) {
+            this.isVanished = false;
+            this.show();
+        }
     }
 
     destroy() {

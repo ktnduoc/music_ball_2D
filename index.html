@@ -130,7 +130,7 @@
                 </select>
             </div>
 
-            <div class="control" style="margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
+            <div class="control">
                 <label>Bar Instrument</label>
                 <select id="bar-instrument" class="btn btn-secondary" style="text-transform: none;" onchange="window.updateBarInstrument(this.value)">
                     <option value="sine">Clean (Sine)</option>
@@ -141,6 +141,19 @@
                     <option value="glass">Crystal Glass (Clink)</option>
                     <option value="drum">Orchestral Drum (Heroic)</option>
                 </select>
+            </div>
+
+            <div class="control" style="margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
+                <label>Lifespan (Max Hits)</label>
+                <select id="bar-max-hits" class="btn btn-secondary" style="text-transform: none;" onchange="window.updateBarMaxHits(this.value)">
+                    <option value="0">Infinite (Forever)</option>
+                    <option value="1">1 Hit (Vanish)</option>
+                    <option value="2">2 Hits</option>
+                    <option value="3">3 Hits</option>
+                    <option value="5">5 Hits</option>
+                    <option value="10">10 Hits</option>
+                </select>
+                <div class="tip" style="margin-top: 5px; font-size: 9px; opacity: 0.4;">SHAPE VANISHES AFTER X HITS</div>
             </div>
         </div>
 
@@ -168,7 +181,7 @@
         </div>
 
         <button id="toggle-follow-btn" class="btn btn-secondary" onclick="window.toggleFollow()">TOGGLE CAMERA FOLLOW</button>
-        <button class="btn btn-danger" onclick="window.clearBalls()">CLEAR ALL BALLS</button>
+        <button class="btn btn-danger" onclick="window.clearBalls()">RESTORE ROUND</button>
         
         <div class="control" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
             <label>Save Current Arrangement</label>
