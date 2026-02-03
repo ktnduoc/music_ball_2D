@@ -1856,21 +1856,30 @@ window.copyShape = function() {
     });
 };
 
-window.loadTemplate = async function(url) {
-    if (!url) return;
+window.loadProjectData = function(data) {
+    if (!data) return;
+    
+    // VALIDATION: Basic check for expected structure
+    if (!data.bars || !Array.isArray(data.bars)) {
+        throw new Error("Invalid format: 'bars' array missing.");
+    }
+
     try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
         // Clear existing
         bars.forEach(b => b.destroy());
         bars = [];
         balls.forEach(b => b.destroy());
         balls = [];
         
-        // Load spawner
-        if (data.spawners) {
-            spawners = data.spawners.map(s => ({ delay: 0, ...s, dragging: false }));
+        // Load spawners
+        if (data.spawners && Array.isArray(data.spawners)) {
+            spawners = data.spawners.map(s => ({ 
+                x: Number(s.x), 
+                y: Number(s.y), 
+                r: Number(s.r || 18), 
+                delay: Number(s.delay || 0), 
+                dragging: false 
+            }));
         } else if (data.spawner) {
             spawners = [{ ...data.spawner, r: 18, dragging: false, delay: 0 }];
         }
@@ -1879,7 +1888,17 @@ window.loadTemplate = async function(url) {
         // Load bars
         if (data.bars) {
             data.bars.forEach(b => {
-                const bar = new Wall(world, Matter, b.x, b.y, b.w, b.h, b.angle, b.note, b.shape, b.instrument || 'sine', b.curvatureTop || 0, b.curvatureBottom || 0);
+                const bar = new Wall(
+                    world, Matter, 
+                    Number(b.x), Number(b.y), 
+                    Number(b.w), Number(b.h), 
+                    Number(b.angle || 0), 
+                    b.note || 'Auto', 
+                    b.shape || 'rect', 
+                    b.instrument || 'sine', 
+                    Number(b.curvatureTop || 0), 
+                    Number(b.curvatureBottom || 0)
+                );
                 bars.push(bar);
             });
         }
@@ -1892,12 +1911,12 @@ window.loadTemplate = async function(url) {
         
         // Load gravity and bounce
         if (data.gravity !== undefined) {
-            window.updateGravity(data.gravity);
+            window.updateGravity(Number(data.gravity));
             const gravInput = document.getElementById('gravity-slider');
             if (gravInput) gravInput.value = data.gravity;
         }
         if (data.bounce !== undefined) {
-            window.updateBounce(data.bounce);
+            window.updateBounce(Number(data.bounce));
             const bounceInput = document.getElementById('bounce-slider');
             if (bounceInput) bounceInput.value = data.bounce;
         }
@@ -1909,8 +1928,57 @@ window.loadTemplate = async function(url) {
             if (bulkSelect) bulkSelect.value = data.instrument;
         }
 
-        window.saveHistory(); // Save after loading template
+        window.saveHistory(); 
+        window.clearFocus();
+        window.syncControls();
+    } catch (err) {
+        throw new Error("Failed to parse project content: " + err.message);
+    }
+};
+
+window.loadTemplate = async function(url) {
+    if (!url) return;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        window.loadProjectData(data);
     } catch (e) {
         console.error("Failed to load template:", e);
+        alert("Error loading template: " + e.message);
     }
+};
+
+window.importFromFile = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file extension/type just to be safe
+        if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
+            alert("Please select a valid .json file");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = event => {
+            try {
+                const data = JSON.parse(event.target.result);
+                window.loadProjectData(data);
+                
+                // Success feedback
+                console.log("Imported successfully:", file.name);
+            } catch (err) {
+                console.error("Import error:", err);
+                alert("Import failed: " + err.message);
+            }
+        };
+        reader.onerror = () => alert("Error reading file");
+        reader.readAsText(file);
+    };
+    
+    input.click();
 };
