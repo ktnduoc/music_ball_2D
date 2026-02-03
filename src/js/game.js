@@ -106,7 +106,7 @@ function applyHistoryState(state) {
 }
 
 // Shape Palette
-let shapePaletteOpen = false;
+let shapePaletteOpen = true;
 let draggingFromPalette = false;
 let paletteShapeData = null;
 let shapeGhostCanvas = null;
@@ -480,35 +480,35 @@ window.initShapePalette = function() {
     });
 };
 
+
 window.toggleShapePalette = function() {
     shapePaletteOpen = !shapePaletteOpen;
     const palette = document.getElementById('shape-palette');
-    const overlay = document.getElementById('palette-overlay');
+    const chevron = document.getElementById('shape-chevron');
     
     if (shapePaletteOpen) {
-        palette.classList.remove('collapsed');
-        overlay.classList.add('active');
+        if (palette) palette.classList.remove('collapsed');
+        if (chevron) chevron.classList.add('shape-chevron-rotated');
     } else {
-        palette.classList.add('collapsed');
-        overlay.classList.remove('active');
+        if (palette) palette.classList.add('collapsed');
+        if (chevron) chevron.classList.remove('shape-chevron-rotated');
     }
 };
 
-window.mousePressed = function() {
+window.mousePressed = function(event) {
     const ui = document.getElementById('ui');
     const toggleBtn = document.querySelector('.toggle-btn');
     const palette = document.getElementById('shape-palette');
     const timingUI = document.getElementById('timing-ui');
-    const isOverUI = ui && ui.contains(event.target);
-    const isOverToggle = toggleBtn && toggleBtn.contains(event.target);
-    const isOverPalette = palette && palette.contains(event.target);
-    const isOverTiming = timingUI && timingUI.contains(event.target);
     
-    // If palette is open and clicking outside, close it
-    if (shapePaletteOpen && !isOverPalette && !isOverUI) {
-        window.toggleShapePalette();
-        return;
-    }
+    // Check if target is inside any UI element
+    const target = event ? event.target : null;
+    const isOverUI = ui && target && ui.contains(target);
+    const isOverToggle = toggleBtn && target && toggleBtn.contains(target);
+    const isOverPalette = palette && target && palette.contains(target);
+    const isOverTiming = timingUI && target && timingUI.contains(target);
+    
+    // If balls are active, don't allow selecting or dragging bars
     
     // Handle dragging from palette
     if (draggingFromPalette && paletteShapeData) {
@@ -539,10 +539,6 @@ window.mousePressed = function() {
         return;
     }
     
-    // Block interaction with bars when palette is open
-    if (shapePaletteOpen) {
-        return;
-    }
     
     // Block interaction with bars when clicking on any UI element
     if (isOverUI || isOverToggle || isOverPalette || isOverTiming) {
@@ -710,20 +706,24 @@ window.mouseWheel = function(event) {
     return false; // Prevent page scroll/zoom for the game area
 };
 
-window.mouseReleased = function() {
+window.mouseReleased = function(event) {
     const worldMouseX = (mouseX - width/2) / zoom + camX;
     const worldMouseY = (mouseY - height/2) / zoom + camY;
 
     // Handle shape dropped from palette
     if (draggingFromPalette && paletteShapeData) {
-        const palette = document.getElementById('shape-palette');
-        const isOverPalette = palette && palette.contains(event.target);
-        
         // Hide ghost
         const ghostDiv = document.getElementById('shape-ghost');
-        ghostDiv.classList.add('hidden');
+        if (ghostDiv) ghostDiv.classList.add('hidden');
         
-        if (!isOverPalette) {
+        // Check if we are releasing over the UI panel
+        const ui = document.getElementById('ui');
+        const target = event ? event.target : null;
+        const isOverUI = ui && target && ui.contains(target);
+        const rect = ui ? ui.getBoundingClientRect() : null;
+        const mouseIsOverUI = rect && mouseX >= rect.left && mouseX <= rect.right && mouseY >= rect.top && mouseY <= rect.bottom;
+
+        if (!isOverUI && !mouseIsOverUI) {
             // Check if it's a static ball
             if (paletteShapeData.shape === 'static_ball') {
                 // Create static ball placeholder (not a physics object yet)
@@ -756,8 +756,6 @@ window.mouseReleased = function() {
             }
             
             window.saveHistory(); // Save after dropping from palette
-            // Auto-close palette after dragging
-            window.toggleShapePalette();
         }
         
         draggingFromPalette = false;
@@ -1076,14 +1074,19 @@ window.draw = function() {
     if (dragMode && (focusedBar || focusedStaticBall)) {
         const targetX = focusedStaticBall ? focusedStaticBall.x : focusedBar.body.position.x;
         
+        // Define "balanced" as being horizontal (angle near zero)
+        const isBalanced = focusedBar && Math.abs(focusedBar.body.angle % PI) < 0.01;
+        const guideColor = isBalanced ? '#4ade80' : '#00f2fe';
+        const guideAlpha = isBalanced ? 180 : 80;
+        
         drawingContext.save();
         drawingContext.setLineDash([15, 10]);
-        stroke(0, 242, 254, 80); // Cyan with better alpha
+        stroke(isBalanced ? color(74, 222, 128, guideAlpha) : color(0, 242, 254, guideAlpha));
         strokeWeight(1.5 / zoom);
         
         // Add a subtle glow
-        drawingContext.shadowBlur = 10 / zoom;
-        drawingContext.shadowColor = '#00f2fe';
+        drawingContext.shadowBlur = 15 / zoom;
+        drawingContext.shadowColor = guideColor;
         
         line(targetX, vMinY, targetX, vMaxY);
         drawingContext.restore();

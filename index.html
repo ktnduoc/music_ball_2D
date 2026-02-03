@@ -45,15 +45,29 @@
     </div>
 
     <div id="ui">
-        <h1>MUSIC BALL 2D</h1>
-        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 20px;">
-            <button class="btn btn-secondary" style="flex: 2; margin-bottom: 0;" onclick="window.toggleShapePalette()">SHAPES</button>
-            <button id="add-spawner-btn" class="btn btn-secondary" style="flex: 0.5; margin-bottom: 0; padding: 10px;" onclick="window.addSpawner()" title="Add Spawner">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="var(--accent)">
+        <div class="title-container">
+            <h1>MUSIC BALL 2D</h1>
+            <button id="add-spawner-btn" class="btn btn-secondary" style="width: 40px; height: 40px; margin-bottom: 0; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px;" onclick="window.addSpawner()" title="Add Spawner">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--accent)">
                     <circle cx="12" cy="12" r="8" />
                     <circle cx="9" cy="9" r="2" fill="white" opacity="0.6" />
                 </svg>
             </button>
+        </div>
+        <div id="shape-section" class="control" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; cursor: pointer;" onclick="window.toggleShapePalette()">
+                <label style="margin-bottom: 0; cursor: pointer;">SHAPE LIBRARY</label>
+                <svg id="shape-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="3" style="transition: transform 0.3s ease;" class="shape-chevron-rotated">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            
+            <div id="shape-palette">
+                <div class="tip" style="margin-bottom: 12px; font-size: 9px; text-align: left;">DRAG SHAPES TO CANVAS</div>
+                <div id="shape-items-container">
+                    <!-- Shape items will be generated here -->
+                </div>
+            </div>
         </div>
 
         <div id="selection-controls" style="display: none;">
@@ -298,30 +312,8 @@
         </div>
     </div>
 
-    <!-- Overlay to block interactions when palette is open -->
-    <div id="palette-overlay" onclick="window.toggleShapePalette()"></div>
-
     <!-- Ghost shape when dragging -->
     <div id="shape-ghost" class="hidden"></div>
-
-    <!-- Shape Palette Panel -->
-    <div id="shape-palette" class="collapsed">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <h2 style="font-size: 14px; margin: 0; color: var(--accent);">LIBRARY</h2>
-            <div style="cursor: pointer; padding: 5px; opacity: 0.6;" onclick="window.toggleShapePalette()">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </div>
-        </div>
-        
-        <div class="tip" style="margin-bottom: 12px; font-size: 9px;">DRAG SHAPES TO CANVAS</div>
-        
-        <div id="shape-items-container">
-            <!-- Shape items will be generated here -->
-        </div>
-    </div>
 
 
     <!-- ES Modules Integration -->

@@ -143,8 +143,25 @@ body {
     stroke: var(--accent);
 }
 
+/* The user provided HTML content within a CSS context.
+   Assuming the intent was to add CSS rules for the new HTML structure,
+   I'm adding a new rule for the container div and adjusting the h1 rule.
+   The original instruction was to "Restore the add spawner button next to the title",
+   which implies an HTML change. Since this is a CSS file, I cannot directly
+   insert HTML. I will interpret this as needing CSS to support such a layout.
+   The provided "Code Edit" block was HTML, which cannot be placed directly into CSS.
+   I will add CSS rules that would style the elements if they were present in HTML.
+*/
+
+.title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
 h1 {
-    margin: 0 0 24px 0;
+    margin: 0; /* Adjusted margin as it's now inside a flex container */
     font-size: 26px;
     font-weight: 700;
     background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -385,29 +402,27 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 12px;
 }
 
-/* Shape Palette */
+/* Shape Library Styling inside Menu */
+#shape-section label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    opacity: 0.9;
+}
+
 #shape-palette {
-    position: absolute;
-    bottom: 120px;
-    right: 10px;
-    width: 280px;
-    background: var(--panel);
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.02);
-    z-index: 150;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    max-height: 400px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+    max-height: 800px; /* Large enough to show all shapes */
+    opacity: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
     scrollbar-width: thin;
     scrollbar-color: var(--accent) transparent;
 }
 
 #shape-palette::-webkit-scrollbar {
-    width: 4px;
+    width: 3px;
 }
 
 #shape-palette::-webkit-scrollbar-thumb {
@@ -416,15 +431,22 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 #shape-palette.collapsed {
-    transform: translateY(150%);
+    max-height: 0;
     opacity: 0;
     pointer-events: none;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.shape-chevron-rotated {
+    transform: rotate(180deg) !important;
 }
 
 #shape-items-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+    padding-bottom: 5px;
 }
 
 .shape-item {
@@ -466,23 +488,6 @@ input[type="range"]::-webkit-slider-thumb {
     color: rgba(255, 255, 255, 0.7);
     text-align: center;
     letter-spacing: 0.5px;
-}
-
-/* Overlay when palette is open */
-#palette-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    z-index: 140;
-    display: none;
-    pointer-events: all;
-}
-
-#palette-overlay.active {
-    display: block;
 }
 
 /* Dragging shape preview */
