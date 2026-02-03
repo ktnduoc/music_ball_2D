@@ -1025,6 +1025,23 @@ window.draw = function() {
     for (let x = -gridBound; x < gridBound; x += 100) line(x, -gridBound, x, gridBound);
     for (let y = -gridBound; y < gridBound; y += 100) line(-gridBound, y, gridBound, y);
 
+    // Alignment Guide (Vertical Dashed Line)
+    if (dragMode && (focusedBar || focusedStaticBall)) {
+        const targetX = focusedStaticBall ? focusedStaticBall.x : focusedBar.body.position.x;
+        
+        drawingContext.save();
+        drawingContext.setLineDash([15, 10]);
+        stroke(0, 242, 254, 80); // Cyan with better alpha
+        strokeWeight(1.5 / zoom);
+        
+        // Add a subtle glow
+        drawingContext.shadowBlur = 10 / zoom;
+        drawingContext.shadowColor = '#00f2fe';
+        
+        line(targetX, -gridBound, targetX, gridBound);
+        drawingContext.restore();
+    }
+
     // Use smaller timesteps for more accurate collision detection
     // Run physics multiple times per frame to prevent tunneling
     const delta = 1000 / 120; // 120 Hz physics (smaller timestep)
