@@ -167,7 +167,7 @@
 
         <div class="control">
             <label>Music Templates</label>
-            <select class="btn btn-secondary" style="text-transform: none;" onchange="window.loadTemplate(this.value)">
+            <select class="btn btn-secondary" style="text-transform: none;" onchange="window.askLoadTemplate(this.value)">
                 <option value="">-- Load a Template --</option>
                 <option value="/templates/staircase.json">Staircase (Melody)</option>
                 <option value="/templates/plinko.json">Plinko (Bumpers)</option>
@@ -190,15 +190,110 @@
             </select>
             <div class="tip" style="margin-top: 5px; font-size: 9px; opacity: 0.4;">OVERWRITES ALL BARS</div>
         </div>
-        
+    </div> <!-- Close #ui -->
+
     <div id="export-modal" class="modal-overlay">
         <div class="modal">
             <h2>Export Composition</h2>
             <label>Composition Name</label>
-            <input type="text" id="export-name" placeholder="Enter name..." value="my-omposition">
+            <input type="text" id="export-name" placeholder="Enter name..." value="my-composition">
             <div class="modal-btns">
                 <button class="btn btn-secondary" onclick="window.closeExportModal()">Cancel</button>
                 <button class="btn" onclick="window.confirmExport()">Export</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal">
+            <h2 style="color: #ef4444;">UNSAVED CHANGES</h2>
+            <p style="font-size: 14px; opacity: 0.8; margin-bottom: 25px; line-height: 1.5; text-align: left;">Changing templates will overwrite your current work. Any unsaved changes will be lost immediately. <b>Are you sure you want to proceed?</b></p>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="window.closeConfirmModal()">Cancel</button>
+                <button class="btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.5); margin-bottom: 0;" onclick="window.confirmLoadTemplate()">YES, PROCEED</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="template-modal" class="modal-overlay active">
+        <div class="modal">
+            <h1 style="text-align: left; margin-bottom: 5px; -webkit-text-fill-color: initial; background: none; color: var(--accent);">WELCOME</h1>
+            <p style="font-size: 14px; opacity: 0.6; margin-bottom: 25px;">Select a template to begin or start with a blank canvas.</p>
+            
+            <div class="template-grid">
+                <!-- Blank Canvas -->
+                <div class="template-card blank" onclick="window.closeTemplateModal('blank')">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        </svg>
+                    </div>
+                    <h3>Blank Canvas</h3>
+                    <p>Start from scratch and build your own unique melody.</p>
+                </div>
+
+                <!-- Staircase Melody -->
+                <div class="template-card" onclick="window.closeTemplateModal('/templates/staircase.json')">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                        </svg>
+                    </div>
+                    <h3>Staircase Melody</h3>
+                    <p>A classic ascending and descending scale experiment.</p>
+                </div>
+
+                <!-- Plinko Bumpers -->
+                <div class="template-card" onclick="window.closeTemplateModal('/templates/plinko.json')">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="9" cy="9" r="1"></circle>
+                            <circle cx="15" cy="9" r="1"></circle>
+                            <circle cx="6" cy="13" r="1"></circle>
+                            <circle cx="12" cy="13" r="1"></circle>
+                            <circle cx="18" cy="13" r="1"></circle>
+                        </svg>
+                    </div>
+                    <h3>Plinko Bumpers</h3>
+                    <p>Chaotic and fun patterns using circular bumpers.</p>
+                </div>
+
+                <!-- Happy Birthday -->
+                <div class="template-card" onclick="window.closeTemplateModal('/templates/happy-birthday.json')">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h14v10a2 2 0 0 1-2 2H4"></path>
+                            <path d="M22 2v20"></path>
+                        </svg>
+                    </div>
+                    <h3>Happy Birthday</h3>
+                    <p>The iconic birthday song arranged vertically.</p>
+                </div>
+
+                <!-- MIDI Jam -->
+                <div class="template-card" onclick="window.closeTemplateModal('/templates/midi-jam.json')">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                    </div>
+                    <h3>MIDI Jam (Draft)</h3>
+                    <p>A more complex multi-spawner arrangement.</p>
+                </div>
+
+                <!-- Mini Game -->
+                <div class="template-card" onclick="window.closeTemplateModal('/templates/happy-birthday-2.json')">
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                        </svg>
+                    </div>
+                    <h3>Mini Game</h3>
+                    <p>A specialized arrangement with interactive elements.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -228,8 +323,6 @@
         </div>
     </div>
 
-    <div class="tip">DRAG BARS TO COMPOSE MELODIES</div>
-    </div>
 
     <!-- ES Modules Integration -->
     <script type="module" src="/src/js/game.js"></script>

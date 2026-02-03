@@ -193,15 +193,10 @@ window.setup = function() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     });
 
-    // Initial bars
-    bars.push(new Wall(world, Matter, 300, 300, 160, 22, 0.2, 'Auto', 'rect'));
-    bars.push(new Wall(world, Matter, 500, 520, 160, 22, -0.2, 'Auto', 'rect'));
-    bars.push(new Wall(world, Matter, 700, 380, 160, 22, 0.5, 'Auto', 'rect'));
-    
-    // Curved bar with curvature
-    const curvedBar = new Wall(world, Matter, 450, 250, 157.27273265996178, 10, 0, 'Auto', 'rect');
-    curvedBar.setCurvature(0.8, 0);
-    bars.push(curvedBar);
+    // Initial state: Start with 1 spawner at center
+    spawners = [{ x: 400, y: 100, r: 18, dragging: false, delay: 0 }];
+    targetCamX = 400;
+    targetCamY = 300;
 
     // Collision detection
     Events.on(engine, 'collisionStart', (event) => {
@@ -665,21 +660,54 @@ window.doubleClicked = function() {
 };
 
 window.mouseWheel = function(event) {
-    const ui = document.getElementById('ui');
-    const palette = document.getElementById('shape-palette');
-    const timingUI = document.getElementById('timing-ui');
+    // Check if mouse is over any UI element that should handle its own scrolling
+    const uiElements = ['ui', 'shape-palette', 'timing-ui', 'template-modal', 'export-modal', 'confirm-modal'];
+    let isOverUI = false;
     
-    // If mouse is over a UI panel, let the browser handle scrolling and don't zoom
-    if ((ui && ui.contains(event.target)) || 
-        (palette && palette.contains(event.target)) || 
-        (timingUI && timingUI.contains(event.target))) {
-        return true; 
+    // Check by target first
+    for (const id of uiElements) {
+        const el = document.getElementById(id);
+        if (el && (el.contains(event.target) || event.target === el)) {
+            // If it's a modal overlay, check if it's active
+            if (el.classList.contains('modal-overlay')) {
+                if (el.classList.contains('active')) {
+                    isOverUI = true;
+                    break;
+                }
+            } else if (!el.classList.contains('collapsed')) {
+                isOverUI = true;
+                break;
+            }
+        }
+    }
+    
+    // Safety check with coordinates if target is ambiguous (e.g. canvas with high z-index)
+    if (!isOverUI) {
+        for (const id of uiElements) {
+            const el = document.getElementById(id);
+            if (el && !el.classList.contains('collapsed')) {
+                // Modals are full screen overlays, so we check the .modal content inside them
+                const targetEl = el.classList.contains('modal-overlay') ? el.querySelector('.modal') : el;
+                if (!targetEl || (el.classList.contains('modal-overlay') && !el.classList.contains('active'))) continue;
+                
+                const rect = targetEl.getBoundingClientRect();
+                if (mouseX >= rect.left && mouseX <= rect.right && mouseY >= rect.top && mouseY <= rect.bottom) {
+                    isOverUI = true;
+                    break;
+                }
+            }
+        }
     }
 
-    // Zoom in/out based on wheel delta
-    targetZoom -= event.delta * 0.001;
+    if (isOverUI) {
+        return true; // Allow native scroll
+    }
+
+    // Zoom in/out based on wheel delta (support both .delta and .deltaY)
+    const delta = event.deltaY || event.delta || 0;
+    targetZoom -= delta * 0.001;
     targetZoom = constrain(targetZoom, 0.2, 3.0);
-    return false; // Prevent page scroll
+    return false; // Prevent page scroll/zoom for the game area
 };
 
 window.mouseReleased = function() {
@@ -1018,12 +1046,31 @@ window.draw = function() {
     scale(zoom);
     translate(-camX, -camY);
     
-    // Draw Animated Grid (Extended for large world)
+    // Viewport Culling logic
+    const margin = 600 / zoom; // Margin for "early loading" of shapes
+    const viewW = width / zoom;
+    const viewH = height / zoom;
+    const vMinX = camX - viewW/2 - margin;
+    const vMaxX = camX + viewW/2 + margin;
+    const vMinY = camY - viewH/2 - margin;
+    const vMaxY = camY + viewH/2 + margin;
+
+    // Performance hint: reduce effects when zoomed out far
+    const lodQuality = zoom < 0.4 ? 'low' : (zoom < 0.8 ? 'medium' : 'high');
+    window.lodQuality = lodQuality; // Pass to other components
+    
+    // Draw Animated Grid (Extended for large world) - Optimized to only draw visible lines
     stroke(255, 255, 255, 12);
     strokeWeight(1 / zoom);
-    const gridBound = 4000;
-    for (let x = -gridBound; x < gridBound; x += 100) line(x, -gridBound, x, gridBound);
-    for (let y = -gridBound; y < gridBound; y += 100) line(-gridBound, y, gridBound, y);
+    
+    // Draw only visible grid lines
+    const startX = Math.floor(vMinX / 100) * 100;
+    const endX = Math.ceil(vMaxX / 100) * 100;
+    const startY = Math.floor(vMinY / 100) * 100;
+    const endY = Math.ceil(vMaxY / 100) * 100;
+    
+    for (let x = startX; x <= endX; x += 100) line(x, vMinY, x, vMaxY);
+    for (let y = startY; y <= endY; y += 100) line(vMinX, y, vMaxX, y);
 
     // Alignment Guide (Vertical Dashed Line)
     if (dragMode && (focusedBar || focusedStaticBall)) {
@@ -1038,7 +1085,7 @@ window.draw = function() {
         drawingContext.shadowBlur = 10 / zoom;
         drawingContext.shadowColor = '#00f2fe';
         
-        line(targetX, -gridBound, targetX, gridBound);
+        line(targetX, vMinY, targetX, vMaxY);
         drawingContext.restore();
     }
 
@@ -1073,20 +1120,34 @@ window.draw = function() {
 
     // Particles Bloom
     for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].draw(window);
-        if (particles[i].alpha <= 0) particles.splice(i, 1);
+        const p = particles[i];
+        // Viewport check for particles (don't draw but still update)
+        if (p.x > vMinX && p.x < vMaxX && p.y > vMinY && p.y < vMaxY) {
+            p.draw(window);
+        } else {
+            // Update logic (duplicated from Particle.draw for distance culling)
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= 8;
+        }
+        if (p.alpha <= 0) particles.splice(i, 1);
     }
 
     // Draw all Spawners
     spawners.forEach((s, index) => {
+        // Viewport check
+        if (s.x < vMinX - 100 || s.x > vMaxX + 100 || s.y < vMinY - 100 || s.y > vMaxY + 100) {
+            return;
+        }
+
         const activeCount = balls.filter(b => b.spawnerIndex === index && !b.wasStatic).length;
         const isMaxed = activeCount >= 3;
         
         push();
         translate(s.x, s.y);
         
-        if (!isMaxed) {
-            drawingContext.shadowBlur = 30 / zoom;
+        if (!isMaxed && lodQuality !== 'low') {
+            drawingContext.shadowBlur = (30 / zoom) * (lodQuality === 'medium' ? 0.5 : 1.0);
             drawingContext.shadowColor = '#00f2fe';
             stroke(0, 242, 254, 100);
             fill(0, 242, 254);
@@ -1123,11 +1184,21 @@ window.draw = function() {
 
     bars.forEach((bar, index) => {
         bar.index = index; // Set index for display
-        bar.draw(window);
+        
+        // Viewport check
+        const pos = bar.body.position;
+        const halfSize = Math.max(bar.w, bar.h);
+        if (pos.x > vMinX - halfSize && pos.x < vMaxX + halfSize &&
+            pos.y > vMinY - halfSize && pos.y < vMaxY + halfSize) {
+            bar.draw(window);
+        }
     });
     
     // Draw static ball placeholders
     staticBallPlaceholders.forEach(placeholder => {
+        // Viewport check
+        if (placeholder.x > vMinX - 50 && placeholder.x < vMaxX + 50 &&
+            placeholder.y > vMinY - 50 && placeholder.y < vMaxY + 50) {
         push();
         translate(placeholder.x, placeholder.y);
         
@@ -1150,11 +1221,20 @@ window.draw = function() {
         }
         
         pop();
+        }
     });
     
     for (let i = balls.length - 1; i >= 0; i--) {
-        balls[i].draw(window);
-        if (balls[i].isOffScreen(camY + (height/2)/zoom + 200)) { // Off screen relative to camera
+        const ball = balls[i];
+        const pos = ball.body.position;
+        
+        // Viewport check for balls
+        if (pos.x > vMinX - 100 && pos.x < vMaxX + 100 &&
+            pos.y > vMinY - 100 && pos.y < vMaxY + 100) {
+            ball.draw(window);
+        }
+        
+        if (ball.isOffScreen(camY + (height/2)/zoom + 400)) { // Off screen relative to camera
             balls[i].destroy();
             balls.splice(i, 1);
         }
@@ -1981,4 +2061,43 @@ window.importFromFile = function() {
     };
     
     input.click();
+};
+
+window.closeTemplateModal = function(templatePath) {
+    const modal = document.getElementById('template-modal');
+    if (modal) modal.classList.remove('active');
+    
+    if (templatePath && templatePath !== 'blank') {
+        window.loadTemplate(templatePath);
+    }
+};
+
+window.pendingTemplateUrl = null;
+
+window.askLoadTemplate = function(url) {
+    if (!url) return;
+    window.pendingTemplateUrl = url;
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.classList.add('active');
+};
+
+window.closeConfirmModal = function() {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.classList.remove('active');
+    window.pendingTemplateUrl = null;
+    
+    // Reset the select box in the UI
+    const selects = document.querySelectorAll('select');
+    selects.forEach(s => {
+        if (s.options && s.options[0] && s.options[0].value === "") {
+            s.selectedIndex = 0;
+        }
+    });
+};
+
+window.confirmLoadTemplate = function() {
+    if (window.pendingTemplateUrl) {
+        window.loadTemplate(window.pendingTemplateUrl);
+    }
+    window.closeConfirmModal();
 };

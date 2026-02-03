@@ -43,12 +43,16 @@ export class Ball {
             });
         }
 
-        // Update trail only if not static
-        if (!this.isStatic) {
+        // Update trail only if not static and LOD is high enough
+        const lod = window.lodQuality || 'high';
+        if (!this.isStatic && lod !== 'low') {
             this.trail.push({ x: pos.x, y: pos.y });
-            if (this.trail.length > this.maxTrail) {
+            const trailLimit = lod === 'medium' ? 8 : 15;
+            if (this.trail.length > trailLimit) {
                 this.trail.shift();
             }
+        } else if (lod === 'low') {
+            this.trail = []; // Clear trail in low quality
         }
 
         p.push();
@@ -96,20 +100,27 @@ export class Ball {
             }
         } else {
             // Dynamic ball: glow effect
-            // Outer Glow
-            p.drawingContext.shadowBlur = 20 + speed * 2;
-            p.drawingContext.shadowColor = this.color;
+            const lod = window.lodQuality || 'high';
             
             // Core layer 1
+            if (lod !== 'low') {
+                p.drawingContext.shadowBlur = (20 + speed * 2) * (lod === 'medium' ? 0.5 : 1.0);
+                p.drawingContext.shadowColor = this.color;
+            }
+            
             p.fill(this.color);
             p.noStroke();
             p.circle(0, 0, this.radius * 2);
             
             // Core layer 2 (Bright Center)
-            p.drawingContext.shadowBlur = 10;
-            p.drawingContext.shadowColor = '#ffffff';
-            p.fill(255);
-            p.circle(0, 0, this.radius * 1.2);
+            if (lod === 'high') {
+                p.drawingContext.shadowBlur = 10;
+                p.drawingContext.shadowColor = '#ffffff';
+                p.fill(255);
+                p.circle(0, 0, this.radius * 1.2);
+            } else {
+                p.drawingContext.shadowBlur = 0;
+            }
         }
         
         p.pop();
