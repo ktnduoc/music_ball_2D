@@ -665,6 +665,17 @@ window.doubleClicked = function() {
 };
 
 window.mouseWheel = function(event) {
+    const ui = document.getElementById('ui');
+    const palette = document.getElementById('shape-palette');
+    const timingUI = document.getElementById('timing-ui');
+    
+    // If mouse is over a UI panel, let the browser handle scrolling and don't zoom
+    if ((ui && ui.contains(event.target)) || 
+        (palette && palette.contains(event.target)) || 
+        (timingUI && timingUI.contains(event.target))) {
+        return true; 
+    }
+
     // Zoom in/out based on wheel delta
     targetZoom -= event.delta * 0.001;
     targetZoom = constrain(targetZoom, 0.2, 3.0);
