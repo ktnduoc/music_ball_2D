@@ -1602,7 +1602,7 @@ window.syncTimingUI = function() {
     
     const spawnerHeader = document.createElement('div');
     spawnerHeader.style = "margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1)";
-    spawnerHeader.innerHTML = `<label style="font-size: 10px; opacity: 0.6;">THỨ TỰ RƠI (SPAWN QUEUE)</label>`;
+    spawnerHeader.innerHTML = `<label style="font-size: 10px; opacity: 0.6;">SPAWN QUEUE</label>`;
     list.appendChild(spawnerHeader);
 
     spawners.forEach((s, index) => {
@@ -1614,9 +1614,9 @@ window.syncTimingUI = function() {
         
         item.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: bold; font-size: 12px;">BÓNG ${index + 1}</span>
+                <span style="font-weight: bold; font-size: 12px;">BALL ${index + 1}</span>
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <span style="font-size: 10px; opacity: 0.5;">TRỄ (s):</span>
+                    <span style="font-size: 10px; opacity: 0.5;">DELAY (s):</span>
                     <input type="number" step="0.1" min="0" value="${s.delay}" onchange="window.updateSpawnerDelay(${index}, this.value)" style="width: 60px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 4px; font-size: 11px;">
                 </div>
             </div>
