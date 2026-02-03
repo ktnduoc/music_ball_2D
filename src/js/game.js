@@ -1556,10 +1556,7 @@ window.windowResized = function() {
 };
 
 window.addSpawner = function() {
-    if (spawners.length >= 5) {
-        alert("MAXIMUM 5 SPAWNERS ALLOWED");
-        return;
-    }
+    if (spawners.length >= 5) return;
     let spawnX = width / 2;
     let spawnY = height / 2;
     
@@ -1586,6 +1583,22 @@ window.syncTimingUI = function() {
     if (!list) return;
     
     list.innerHTML = '';
+    
+    // Disable Add button if at limit
+    const addBtn = document.getElementById('add-spawner-btn');
+    if (addBtn) {
+        if (spawners.length >= 5) {
+            addBtn.disabled = true;
+            addBtn.style.opacity = '0.3';
+            addBtn.style.cursor = 'not-allowed';
+            addBtn.title = "MAXIMUM 5 SPAWNERS REACHED";
+        } else {
+            addBtn.disabled = false;
+            addBtn.style.opacity = '1';
+            addBtn.style.cursor = 'pointer';
+            addBtn.title = "Add Spawner";
+        }
+    }
     
     const spawnerHeader = document.createElement('div');
     spawnerHeader.style = "margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1)";
