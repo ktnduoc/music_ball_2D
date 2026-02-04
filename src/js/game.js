@@ -643,7 +643,7 @@ window.mousePressed = function(event) {
                     dragOffset.y = worldMouseY - bar.body.position.y;
                 }
                 hitSomething = true;
-                window.syncControls();
+                if (window.syncControls) window.syncControls();
                 break;
             }
         }
@@ -685,15 +685,136 @@ window.mousePressed = function(event) {
             focusedBar = null;
             focusedStaticBall = null;
             dragMode = null;
-            window.syncControls();
+            if (window.syncControls) window.syncControls();
         }
     }
 
     // Sync UI Visibility
-    const controls = document.getElementById('selection-controls');
-    if (controls) {
-        controls.style.display = (focusedBar || selectedBars.length > 0) ? 'block' : 'none';
+    if (window.syncControls) window.syncControls();
+};
+
+// Sync controls with selection
+window.syncControls = function() {
+    window.selectedBars = selectedBars;
+    const count = selectedBars.length;
+    const isMulti = count > 1;
+    
+    console.log('[DEBUG] syncControls called. Selected:', count);
+    
+    // 1. Panel chi tiết (Curvature, Note, Instrument...)
+    const selectionPanel = document.getElementById('selection-controls');
+    if (selectionPanel) {
+        selectionPanel.style.display = (count > 0 || focusedBar) ? 'block' : 'none';
+        
+        // Cập nhật giá trị input dựa trên bar đầu tiên được chọn
+        const primary = focusedBar || (count > 0 ? selectedBars[0] : null);
+        if (primary && !isMulti) {
+            const nInput = document.getElementById('bar-note');
+            const sInput = document.getElementById('bar-shape');
+            const iInput = document.getElementById('bar-instrument');
+            const ctInput = document.getElementById('curvature-top');
+            const cbInput = document.getElementById('curvature-bottom');
+            const mhInput = document.getElementById('bar-max-hits');
+            
+            if (nInput) nInput.value = primary.note;
+            if (sInput) sInput.value = primary.shape;
+            if (iInput) iInput.value = primary.instrument || 'sine';
+            if (ctInput) ctInput.value = primary.curvatureTop;
+            if (cbInput) cbInput.value = primary.curvatureBottom;
+            if (mhInput) mhInput.value = primary.maxHits || 0;
+            
+            // Hiện các control bị ẩn khi multi-select
+            const controlsToToggle = [
+                nInput, iInput, ctInput, cbInput, mhInput, 
+                document.getElementById('btn-copy-shape')
+            ];
+            controlsToToggle.forEach(el => {
+                if (el) {
+                    const parent = el.closest('.control');
+                    if (parent) parent.style.display = 'block';
+                }
+            });
+        }
+        
+        // Ẩn các control chi tiết nếu đang chọn nhiều (multi-select)
+        if (isMulti) {
+            const selectors = ['#bar-note', '#bar-instrument', '#curvature-top', '#curvature-bottom', '#bar-max-hits', '#btn-copy-shape'];
+            selectors.forEach(sel => {
+                const el = document.querySelector(sel);
+                if (el) {
+                    const parent = el.closest('.control');
+                    if (parent) parent.style.display = 'none';
+                }
+            });
+            // Ẩn luôn cái tip dashed
+            const tip = document.querySelector('.control[style*="dashed"]');
+            if (tip) tip.style.display = 'none';
+        } else {
+            const tip = document.querySelector('.control[style*="dashed"]');
+            if (tip) tip.style.display = 'block';
+        }
+        
+        // Điều khiển handles trong Wall.js
+        bars.forEach(b => b.hideHandles = isMulti);
     }
+    
+    // 2. Slider Scale (Scale Selected Bars)
+    const multiScalePanel = document.getElementById('multi-scale-control');
+    const countDisplay = document.getElementById('selected-count');
+    
+    if (multiScalePanel) {
+        // Luôn hiện theo yêu cầu để xử lý sau
+        multiScalePanel.style.display = 'block';
+        if (countDisplay) countDisplay.textContent = count;
+        
+        if (isMulti) {
+            console.log('[DEBUG] Scale Slider ACTIVE for', count, 'bars');
+            // Reset baseline khi tập hợp bars thay đổi
+            if (!window.originalBarSizes) {
+                const slider = document.getElementById('multi-scale-slider');
+                if (slider) slider.value = 1.0;
+                const scaleDisplay = document.getElementById('scale-value');
+                if (scaleDisplay) scaleDisplay.textContent = '100%';
+            }
+        } else {
+            console.log('[DEBUG] Scale Slider WAITING (count <= 1)');
+            window.originalBarSizes = null;
+        }
+    }
+};
+
+// Scale selected bars
+window.scaleSelectedBars = function(scaleValue) {
+    const scale = parseFloat(scaleValue);
+    const scaleDisplay = document.getElementById('scale-value');
+    if (scaleDisplay) {
+        scaleDisplay.textContent = Math.round(scale * 100) + '%';
+    }
+    
+    // Use window.selectedBars or local selectedBars (they should be same)
+    const currentSelection = window.selectedBars || selectedBars;
+    
+    if (currentSelection.length === 0) {
+        console.warn('scaleSelectedBars called but no bars selected');
+        return;
+    }
+    
+    // Store original sizes if not already stored for THIS selection
+    if (!window.originalBarSizes) {
+        window.originalBarSizes = currentSelection.map(bar => ({
+            w: bar.w,
+            h: bar.h
+        }));
+        console.log('Baseline established for', currentSelection.length, 'bars');
+    }
+    
+    currentSelection.forEach((bar, index) => {
+        const original = window.originalBarSizes[index];
+        if (original) {
+            // Use the built-in resize method that handles physics body recreation
+            bar.resize(original.w * scale, original.h * scale);
+        }
+    });
 };
 
 window.doubleClicked = function() {
@@ -1841,6 +1962,7 @@ window.keyPressed = function() {
 
     // Select All (Ctrl + A)
     if (keyIsDown(CONTROL) && (key === 'a' || key === 'A')) {
+        console.log('Ctrl + A pressed. Selecting all', bars.length, 'bars.');
         selectedBars = [...bars];
         selectedBars.forEach(b => b.isFocused = true);
         focusedBar = selectedBars.length > 0 ? selectedBars[0] : null;
@@ -1927,9 +2049,9 @@ window.confirmExport = function() {
     const nameInput = document.getElementById('export-name');
     let rawName = nameInput ? nameInput.value : "my-composition";
     
-    // Get readonly mode
-    const readonlyRadio = document.querySelector('input[name="template-mode"]:checked');
-    const isReadOnly = readonlyRadio ? readonlyRadio.value === 'readonly' : false;
+    // Get readonly mode from checkbox
+    const readonlyCheckbox = document.getElementById('readonly-checkbox');
+    const isReadOnly = readonlyCheckbox ? readonlyCheckbox.checked : false;
     
     // Slugify: remove accents, lowercase, replace non-alphanumeric with hyphens
     const compName = rawName
