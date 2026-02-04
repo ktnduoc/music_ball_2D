@@ -1,12 +1,13 @@
 {
   "name": "Plinko",
+  "readonly": false,
   "spawner": { "x": 400, "y": 50 },
   "bars": [
-    { "x": 400, "y": 200, "w": 40, "h": 40, "angle": 0, "note": "C4", "shape": "circle" },
-    { "x": 300, "y": 350, "w": 40, "h": 40, "angle": 0, "note": "D4", "shape": "circle" },
-    { "x": 500, "y": 350, "w": 40, "h": 40, "angle": 0, "note": "E4", "shape": "circle" },
-    { "x": 200, "y": 500, "w": 40, "h": 40, "angle": 0, "note": "F4", "shape": "circle" },
-    { "x": 400, "y": 500, "w": 40, "h": 40, "angle": 0, "note": "G4", "shape": "circle" },
-    { "x": 600, "y": 500, "w": 40, "h": 40, "angle": 0, "note": "A4", "shape": "circle" }
+    { "x": 400, "y": 200, "w": 40, "h": 40, "angle": 0, "note": "C4", "shape": "circle", "maxHits": 0 },
+    { "x": 300, "y": 350, "w": 40, "h": 40, "angle": 0, "note": "D4", "shape": "circle", "maxHits": 0 },
+    { "x": 500, "y": 350, "w": 40, "h": 40, "angle": 0, "note": "E4", "shape": "circle", "maxHits": 0 },
+    { "x": 200, "y": 500, "w": 40, "h": 40, "angle": 0, "note": "F4", "shape": "circle", "maxHits": 0 },
+    { "x": 400, "y": 500, "w": 40, "h": 40, "angle": 0, "note": "G4", "shape": "circle", "maxHits": 0 },
+    { "x": 600, "y": 500, "w": 40, "h": 40, "angle": 0, "note": "A4", "shape": "circle", "maxHits": 0 }
   ]
 }

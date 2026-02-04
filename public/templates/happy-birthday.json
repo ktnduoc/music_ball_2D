@@ -22,7 +22,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 331.64974987608514,
@@ -34,7 +35,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 85.0000006103516,
@@ -46,7 +48,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 261.6666661919489,
@@ -58,7 +61,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -70,7 +74,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -82,7 +87,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -94,7 +100,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -106,7 +113,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -118,7 +126,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -130,7 +139,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -142,7 +152,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -154,7 +165,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -166,7 +178,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -178,7 +191,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -190,7 +204,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -202,7 +217,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -214,7 +230,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -226,7 +243,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -238,7 +256,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -250,7 +269,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -262,7 +282,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -274,7 +295,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -286,7 +308,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 250,
@@ -298,7 +321,8 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     },
     {
       "x": 100,
@@ -310,7 +334,9 @@
       "shape": "rect",
       "instrument": "sine",
       "curvatureTop": 0.8,
-      "curvatureBottom": 0
+      "curvatureBottom": 0,
+      "maxHits": 0
     }
-  ]
+  ],
+  "readonly": false
 }

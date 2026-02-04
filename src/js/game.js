@@ -18,6 +18,7 @@ let defaultBarWidth = 160;
 let defaultBarShape = 'rect';
 let defaultBarNote = 'Auto';
 let defaultBarInstrument = 'sine';
+let isTemplateReadOnly = false; // Track if current template is read-only
 
 // History / Undo System
 let undoStack = [];
@@ -325,7 +326,36 @@ window.setup = function() {
     
     window.syncTimingUI();
     window.initShapePalette();
+    window.loadTemplateMetadata(); // Load template metadata for badges
     window.saveHistory(); // Save initial state
+};
+
+// Load template metadata to show readonly badges
+window.loadTemplateMetadata = async function() {
+    const templateCards = document.querySelectorAll('.template-card[data-template-url]');
+    
+    for (const card of templateCards) {
+        const url = card.dataset.templateUrl;
+        if (!url) continue;
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            // Add readonly badge if template is readonly
+            if (data.readonly === true) {
+                // Check if badge already exists
+                if (!card.querySelector('.template-readonly-badge')) {
+                    const badge = document.createElement('div');
+                    badge.className = 'template-readonly-badge';
+                    badge.textContent = 'READ-ONLY';
+                    card.appendChild(badge);
+                }
+            }
+        } catch (err) {
+            console.warn(`Failed to load metadata for ${url}:`, err);
+        }
+    }
 };
 
 // Shape Palette Functions
@@ -521,17 +551,28 @@ window.mousePressed = function(event) {
     const worldMouseX = (mouseX - width/2) / zoom + camX;
     const worldMouseY = (mouseY - height/2) / zoom + camY;
 
-    // Check Spawners first
+    // Check Spawners first - ALLOW in readonly mode for spawning balls
     if (!isOverUI && !isOverToggle && !isOverPalette && !isOverTiming) {
         for (let s of spawners) {
             let d = dist(worldMouseX, worldMouseY, s.x, s.y);
             if (d < s.r + 15) {
-                s.dragging = true;
-                spawnerPressPos = { x: worldMouseX, y: worldMouseY };
-                dragMode = 'spawner';
+                // In readonly mode, only allow spawning, not dragging
+                if (isTemplateReadOnly) {
+                    spawnerPressPos = { x: worldMouseX, y: worldMouseY };
+                    dragMode = 'spawner-readonly'; // Special mode for readonly
+                } else {
+                    s.dragging = true;
+                    spawnerPressPos = { x: worldMouseX, y: worldMouseY };
+                    dragMode = 'spawner';
+                }
                 return;
             }
         }
+    }
+    
+    // Block all other editing interactions in read-only mode
+    if (isTemplateReadOnly) {
+        return;
     }
 
     // If balls are active, don't allow selecting or dragging bars
@@ -775,6 +816,24 @@ window.mouseReleased = function(event) {
             }
             s.dragging = false;
         }
+    }
+    
+    // Handle readonly spawner click (spawn ball without dragging)
+    if (dragMode === 'spawner-readonly') {
+        const moveDist = dist(worldMouseX, worldMouseY, spawnerPressPos.x, spawnerPressPos.y);
+        if (moveDist < 5) {
+            // Find which spawner was clicked
+            for (let i = 0; i < spawners.length; i++) {
+                const s = spawners[i];
+                const d = dist(worldMouseX, worldMouseY, s.x, s.y);
+                if (d < s.r + 15) {
+                    window.spawnBall(s.x, s.y, i);
+                    break;
+                }
+            }
+        }
+        dragMode = null;
+        return;
     }
 
     // Check if dropping into trash
@@ -1857,6 +1916,10 @@ window.confirmExport = function() {
     const nameInput = document.getElementById('export-name');
     let rawName = nameInput ? nameInput.value : "my-composition";
     
+    // Get readonly mode
+    const readonlyRadio = document.querySelector('input[name="template-mode"]:checked');
+    const isReadOnly = readonlyRadio ? readonlyRadio.value === 'readonly' : false;
+    
     // Slugify: remove accents, lowercase, replace non-alphanumeric with hyphens
     const compName = rawName
         .normalize("NFD")                     // Split accents from characters
@@ -1872,6 +1935,7 @@ window.confirmExport = function() {
     
     const data = {
         name: compName,
+        readonly: isReadOnly,
         gravity: engine.gravity.y,
         bounce: parseFloat(document.getElementById('bounce-slider').value),
         instrument: defaultBarInstrument,
@@ -1905,6 +1969,7 @@ window.confirmExport = function() {
 window.copyToClipboard = function() {
     const data = {
         name: "copied-composition",
+        readonly: false, // Copied compositions are always editable
         gravity: engine.gravity.y,
         bounce: parseFloat(document.getElementById('bounce-slider').value),
         instrument: defaultBarInstrument,
@@ -2034,6 +2099,10 @@ window.loadProjectData = function(data) {
         window.saveHistory(); 
         window.clearFocus();
         window.syncControls();
+        
+        // Handle readonly mode
+        isTemplateReadOnly = data.readonly === true;
+        window.applyReadOnlyMode();
     } catch (err) {
         throw new Error("Failed to parse project content: " + err.message);
     }
@@ -2048,6 +2117,103 @@ window.loadTemplate = async function(url) {
     } catch (e) {
         console.error("Failed to load template:", e);
         alert("Error loading template: " + e.message);
+    }
+};
+
+window.applyReadOnlyMode = function() {
+    const readOnlyBanner = document.getElementById('readonly-banner');
+    const uiPanel = document.getElementById('ui');
+    const toggleBtn = document.querySelector('.toggle-btn');
+    const timingUI = document.getElementById('timing-ui');
+    const timingToggleBtn = document.getElementById('timing-toggle-btn');
+    
+    if (isTemplateReadOnly) {
+        // Show banner if it doesn't exist
+        if (!readOnlyBanner) {
+            const banner = document.createElement('div');
+            banner.id = 'readonly-banner';
+            banner.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: rgba(20, 20, 20, 0.95);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.7);
+                padding: 6px 20px;
+                text-align: center;
+                font-size: 11px;
+                font-weight: 500;
+                z-index: 10000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                letter-spacing: 0.5px;
+            `;
+            banner.innerHTML = 'READ-ONLY MODE - This template cannot be modified.';
+            document.body.prepend(banner);
+        }
+        
+        // Hide UI panel and toggle button
+        if (uiPanel) {
+            uiPanel.classList.add('collapsed');
+        }
+        if (toggleBtn) {
+            toggleBtn.style.display = 'none';
+        }
+        
+        // Hide timing UI panel and toggle button
+        if (timingUI) {
+            timingUI.classList.add('collapsed');
+        }
+        if (timingToggleBtn) {
+            timingToggleBtn.style.display = 'none';
+        }
+        
+        // Disable editing controls (but keep them for when UI is shown)
+        const disableIds = [
+            'curvature-top', 'curvature-bottom', 'bar-shape', 'bar-note', 
+            'bar-instrument', 'bar-max-hits', 'gravity-slider', 'bounce-slider',
+            'instrument-select', 'bulk-instrument-select', 'add-spawner-btn'
+        ];
+        
+        disableIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = true;
+        });
+        
+        // Disable shape palette dragging
+        draggingFromPalette = false;
+        
+        console.log('✓ Read-only mode activated');
+    } else {
+        // Remove banner if exists
+        if (readOnlyBanner) {
+            readOnlyBanner.remove();
+        }
+        
+        // Show UI panel and toggle button
+        if (toggleBtn) {
+            toggleBtn.style.display = 'flex';
+        }
+        
+        // Show timing toggle button
+        if (timingToggleBtn) {
+            timingToggleBtn.style.display = 'flex';
+        }
+        
+        // Enable all controls
+        const enableIds = [
+            'curvature-top', 'curvature-bottom', 'bar-shape', 'bar-note', 
+            'bar-instrument', 'bar-max-hits', 'gravity-slider', 'bounce-slider',
+            'instrument-select', 'bulk-instrument-select', 'add-spawner-btn'
+        ];
+        
+        enableIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = false;
+        });
+        
+        console.log('✓ Editable mode activated');
     }
 };
 
@@ -2092,6 +2258,15 @@ window.closeTemplateModal = function(templatePath) {
     
     if (templatePath && templatePath !== 'blank') {
         window.loadTemplate(templatePath);
+    }
+};
+
+window.openTemplateModal = function() {
+    const modal = document.getElementById('template-modal');
+    if (modal) {
+        modal.classList.add('active');
+        // Reload template metadata to update badges
+        window.loadTemplateMetadata();
     }
 };
 

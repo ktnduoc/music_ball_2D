@@ -143,6 +143,35 @@ body {
     stroke: var(--accent);
 }
 
+#home-btn {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 50px;
+    height: 50px;
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 101;
+    transition: all 0.3s ease;
+}
+
+#home-btn svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--accent);
+}
+
+#home-btn:hover, #timing-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
 /* The user provided HTML content within a CSS context.
    Assuming the intent was to add CSS rules for the new HTML structure,
    I'm adding a new rule for the container div and adjusting the h1 rule.
@@ -592,5 +621,36 @@ input[type="range"]::-webkit-slider-thumb {
 #template-modal .modal {
     width: 80%;
     max-width: 900px;
+}
+
+.template-card {
+    position: relative;
+}
+
+.template-readonly-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.template-card:hover .template-readonly-badge {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 

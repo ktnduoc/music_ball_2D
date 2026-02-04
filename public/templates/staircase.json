@@ -1,10 +1,11 @@
 {
   "name": "Staircase",
+  "readonly": false,
   "spawner": { "x": -150, "y": 100 },
   "bars": [
-    { "x": 100, "y": 250, "w": 160, "h": 22, "angle": 0.2, "note": "C4", "shape": "rect" },
-    { "x": 350, "y": 400, "w": 180, "h": 22, "angle": -0.1, "note": "E4", "shape": "rect" },
-    { "x": 600, "y": 550, "w": 160, "h": 22, "angle": 0.3, "note": "G4", "shape": "rect" },
-    { "x": 850, "y": 700, "w": 200, "h": 22, "angle": -0.2, "note": "C5", "shape": "rect" }
+    { "x": 100, "y": 250, "w": 160, "h": 22, "angle": 0.2, "note": "C4", "shape": "rect", "maxHits": 0 },
+    { "x": 350, "y": 400, "w": 180, "h": 22, "angle": -0.1, "note": "E4", "shape": "rect", "maxHits": 0 },
+    { "x": 600, "y": 550, "w": 160, "h": 22, "angle": 0.3, "note": "G4", "shape": "rect", "maxHits": 0 },
+    { "x": 850, "y": 700, "w": 200, "h": 22, "angle": -0.2, "note": "C5", "shape": "rect", "maxHits": 0 }
   ]
 }
