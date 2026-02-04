@@ -455,5 +455,5 @@
       "maxHits": 0
     }
   ],
-  "readonly": true
+  "readonly": false
 }
