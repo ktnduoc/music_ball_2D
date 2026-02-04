@@ -610,13 +610,24 @@ window.mousePressed = function(event) {
                     // Toggle selection
                     const idx = selectedBars.indexOf(bar);
                     if (idx === -1) {
+                        // Add to selection
                         selectedBars.push(bar);
                         bar.isFocused = true;
                     } else {
+                        // Remove from selection (deselect)
                         selectedBars.splice(idx, 1);
                         bar.isFocused = false;
                     }
-                    focusedBar = selectedBars.length === 1 ? selectedBars[0] : null;
+                    
+                    // Update focusedBar based on selection
+                    if (selectedBars.length === 1) {
+                        focusedBar = selectedBars[0];
+                    } else if (selectedBars.length === 0) {
+                        focusedBar = null;
+                    } else {
+                        // Multiple bars selected, no single focused bar
+                        focusedBar = null;
+                    }
                 } else {
                     // Normal single selection
                     // Reset all
@@ -665,7 +676,7 @@ window.mousePressed = function(event) {
     }
 
     if (!hitSomething && !isOverUI && !isOverToggle && !isOverPalette && !isOverTiming) {
-        // Clear all selections if clicking empty space without Ctrl
+        // Clear all selections when clicking empty space (but not if Ctrl is held)
         if (!isCtrlDown) {
             bars.forEach(b => b.isFocused = false);
             selectedBars = [];
