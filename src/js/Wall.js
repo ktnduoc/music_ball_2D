@@ -178,10 +178,9 @@ export class Wall {
         
         // Shadow/Glow - Performance Optimized
         const lod = window.lodQuality || 'high';
-        if ((this.activated || this.isFocused) && lod !== 'low') {
-            const blurScale = lod === 'medium' ? 0.5 : 1.0;
-            p.drawingContext.shadowBlur = (10 + this.glow * 30) * blurScale;
-            p.drawingContext.shadowColor = this.isFocused ? 'rgba(0, 255, 100, 0.5)' : this.settings.color;
+        if ((this.activated || this.isFocused) && lod === 'high') {
+            p.drawingContext.shadowBlur = (5 + this.glow * 10); // Reduced blur radius
+            p.drawingContext.shadowColor = this.isFocused ? 'rgba(0, 255, 100, 0.4)' : this.settings.color;
         } else {
             p.drawingContext.shadowBlur = 0;
         }

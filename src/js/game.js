@@ -157,14 +157,18 @@ class Particle {
     }
 
     draw(p) {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= 8;
+        this.updateOnly();
         p.noStroke();
         let c = p.color(this.color);
         c.setAlpha(this.alpha);
         p.fill(c);
         p.circle(this.x, this.y, this.size);
+    }
+
+    updateOnly() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 8;
     }
 }
 
@@ -175,20 +179,19 @@ window.setup = function() {
     // so poly-decomp is not required
     if (typeof decomp !== 'undefined') {
         Matter.Common.setDecomp(decomp);
-        console.log('✓ poly-decomp initialized successfully');
     }
     
     engine = Engine.create();
     world = engine.world;
     engine.gravity.y = 1;
     
-    // Prevent tunneling at high speeds with increased iterations
-    engine.positionIterations = 20; // Increased from 10
-    engine.velocityIterations = 16; // Increased from 8
-    engine.constraintIterations = 4; // Increased from 2
+    // Balanced iterations for performance and stability
+    engine.positionIterations = 10; 
+    engine.velocityIterations = 8; 
+    engine.constraintIterations = 2; 
     
     // Collision detection settings
-    engine.enableSleeping = false; // Disable sleeping to ensure continuous collision check
+    engine.enableSleeping = true; // Enable sleeping to save CPU on idle objects
     world.bounds = { min: { x: -5000, y: -5000 }, max: { x: 5000, y: 5000 } };
 
     // Audio setup
@@ -492,8 +495,6 @@ window.initShapePalette = function() {
                 // Position ghost at mouse
                 ghostDiv.style.left = e.clientX + 'px';
                 ghostDiv.style.top = e.clientY + 'px';
-                
-                console.log('Ghost activated at', e.clientX, e.clientY);
             }
         });
         
@@ -699,8 +700,6 @@ window.syncControls = function() {
     const count = selectedBars.length;
     const isMulti = count > 1;
     
-    console.log('[DEBUG] syncControls called. Selected:', count);
-    
     // 1. Panel chi tiết (Curvature, Note, Instrument...)
     const selectionPanel = document.getElementById('selection-controls');
     if (selectionPanel) {
@@ -717,7 +716,20 @@ window.syncControls = function() {
             const mhInput = document.getElementById('bar-max-hits');
             
             if (nInput) nInput.value = primary.note;
-            if (sInput) sInput.value = primary.shape;
+            if (sInput) {
+                // Determine if this is a known preset based on its properties
+                if (primary.shape === 'rect') {
+                    if (Math.abs(primary.curvatureTop - 0.8) < 0.01 && primary.curvatureBottom === 0) {
+                        sInput.value = 'wave_bridge';
+                    } else if (Math.abs(primary.curvatureTop - (-0.1)) < 0.01 && primary.curvatureBottom === 0) {
+                        sInput.value = 'bowl_slope';
+                    } else {
+                        sInput.value = 'rect';
+                    }
+                } else {
+                    sInput.value = primary.shape;
+                }
+            }
             if (iInput) iInput.value = primary.instrument || 'sine';
             if (ctInput) ctInput.value = primary.curvatureTop;
             if (cbInput) cbInput.value = primary.curvatureBottom;
@@ -768,7 +780,6 @@ window.syncControls = function() {
         if (countDisplay) countDisplay.textContent = count;
         
         if (isMulti) {
-            console.log('[DEBUG] Scale Slider ACTIVE for', count, 'bars');
             // Reset baseline khi tập hợp bars thay đổi
             if (!window.originalBarSizes) {
                 const slider = document.getElementById('multi-scale-slider');
@@ -777,7 +788,6 @@ window.syncControls = function() {
                 if (scaleDisplay) scaleDisplay.textContent = '100%';
             }
         } else {
-            console.log('[DEBUG] Scale Slider WAITING (count <= 1)');
             window.originalBarSizes = null;
         }
     }
@@ -795,7 +805,6 @@ window.scaleSelectedBars = function(scaleValue) {
     const currentSelection = window.selectedBars || selectedBars;
     
     if (currentSelection.length === 0) {
-        console.warn('scaleSelectedBars called but no bars selected');
         return;
     }
     
@@ -805,7 +814,6 @@ window.scaleSelectedBars = function(scaleValue) {
             w: bar.w,
             h: bar.h
         }));
-        console.log('Baseline established for', currentSelection.length, 'bars');
     }
     
     currentSelection.forEach((bar, index) => {
@@ -1127,10 +1135,18 @@ window.updateBarShape = function(v) {
         window.saveHistory();
         return;
     }
+    
     defaultBarShape = v;
     targets.forEach(bar => {
+        // Reset curvature for standard shapes to ensure they are "clean"
+        if (v === 'rect' || v === 'circle' || v === 'triangle' || v === 'seesaw') {
+            bar.curvatureTop = 0;
+            bar.curvatureBottom = 0;
+        }
         bar.setShape(v);
     });
+    
+    window.syncControls(); // Update UI to reflect reset curvatures
     window.saveHistory();
 };
 
@@ -1152,60 +1168,6 @@ window.clearFocus = function() {
     if (focusedStaticBall) {
         focusedStaticBall.isFocused = false;
         focusedStaticBall = null;
-    }
-};
-
-window.syncControls = function() {
-    const controls = document.getElementById('selection-controls');
-    if (controls) {
-        const isMulti = selectedBars.length > 1;
-        const hasSelection = focusedBar || selectedBars.length > 0;
-        
-        controls.style.display = hasSelection ? 'block' : 'none';
-        
-        // Target for values display
-        const primary = focusedBar || (selectedBars.length > 0 ? selectedBars[0] : null);
-        
-        if (primary) {
-            const nInput = document.getElementById('bar-note');
-            const sInput = document.getElementById('bar-shape');
-            const iInput = document.getElementById('bar-instrument');
-            const ctInput = document.getElementById('curvature-top');
-            const cbInput = document.getElementById('curvature-bottom');
-            const copyBtn = document.getElementById('btn-copy-shape');
-            
-            // Hide controls not allowed in multi-select
-            const noteControl = nInput ? nInput.closest('.control') : null;
-            const instControl = iInput ? iInput.closest('.control') : null;
-            const curvTopControl = ctInput ? ctInput.closest('.control') : null;
-            const curvBotControl = cbInput ? cbInput.closest('.control') : null;
-            const tipControl = document.querySelector('.control[style*="dashed"]'); 
-
-            // Special handling for elements requested
-            if (noteControl) noteControl.style.display = isMulti ? 'none' : 'block';
-            if (instControl) instControl.style.display = isMulti ? 'none' : 'block';
-            if (curvTopControl) curvTopControl.style.display = isMulti ? 'none' : 'block';
-            if (curvBotControl) curvBotControl.style.display = isMulti ? 'none' : 'block';
-            if (tipControl) tipControl.style.display = isMulti ? 'none' : 'block';
-            if (copyBtn) copyBtn.style.display = isMulti ? 'none' : 'block';
-
-            if (nInput) nInput.value = primary.note;
-            if (sInput) sInput.value = primary.shape;
-            if (iInput) iInput.value = primary.instrument || 'sine';
-            if (ctInput) ctInput.value = primary.curvatureTop;
-            if (cbInput) cbInput.value = primary.curvatureBottom;
-            
-            const mhInput = document.getElementById('bar-max-hits');
-            if (mhInput) {
-                mhInput.closest('.control').style.display = isMulti ? 'none' : 'block';
-                mhInput.value = primary.maxHits || 0;
-            }
-            
-            // Signal Wall.js whether to show handles
-            bars.forEach(b => {
-                b.hideHandles = isMulti;
-            });
-        }
     }
 };
 
@@ -1298,11 +1260,10 @@ window.draw = function() {
         drawingContext.restore();
     }
 
-    // Use smaller timesteps for more accurate collision detection
-    // Run physics multiple times per frame to prevent tunneling
-    const delta = 1000 / 120; // 120 Hz physics (smaller timestep)
-    Engine.update(engine, delta);
-    Engine.update(engine, delta); // Run twice per frame for high accuracy
+    // Physics Update - Use deltaTime to be frame-rate independent
+    // and prevent over-taxing the CPU on high-refresh monitors
+    const physicsDelta = Math.min(deltaTime, 32); // Cap at ~30fps equivalent to prevent jumping
+    Engine.update(engine, physicsDelta);
 
     // Keyboard Movement for Selected Bars
     if (document.activeElement.tagName !== 'INPUT' && (selectedBars.length > 0 || focusedStaticBall)) {
@@ -1327,17 +1288,16 @@ window.draw = function() {
         }
     }
 
-    // Particles Bloom
+    // Particles Bloom - Capped for performance
+    if (particles.length > 100) particles.splice(0, particles.length - 100);
+    
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        // Viewport check for particles (don't draw but still update)
+        // Viewport check for particles
         if (p.x > vMinX && p.x < vMaxX && p.y > vMinY && p.y < vMaxY) {
             p.draw(window);
         } else {
-            // Update logic (duplicated from Particle.draw for distance culling)
-            p.x += p.vx;
-            p.y += p.vy;
-            p.alpha -= 8;
+            p.updateOnly();
         }
         if (p.alpha <= 0) particles.splice(i, 1);
     }
@@ -1962,7 +1922,6 @@ window.keyPressed = function() {
 
     // Select All (Ctrl + A)
     if (keyIsDown(CONTROL) && (key === 'a' || key === 'A')) {
-        console.log('Ctrl + A pressed. Selecting all', bars.length, 'bars.');
         selectedBars = [...bars];
         selectedBars.forEach(b => b.isFocused = true);
         focusedBar = selectedBars.length > 0 ? selectedBars[0] : null;
@@ -2316,8 +2275,6 @@ window.applyReadOnlyMode = function() {
         
         // Disable shape palette dragging
         draggingFromPalette = false;
-        
-        console.log('✓ Read-only mode activated');
     } else {
         // Remove banner if exists
         if (readOnlyBanner) {
@@ -2345,8 +2302,6 @@ window.applyReadOnlyMode = function() {
             const el = document.getElementById(id);
             if (el) el.disabled = false;
         });
-        
-        console.log('✓ Editable mode activated');
     }
 };
 
@@ -2370,9 +2325,6 @@ window.importFromFile = function() {
             try {
                 const data = JSON.parse(event.target.result);
                 window.loadProjectData(data);
-                
-                // Success feedback
-                console.log("Imported successfully:", file.name);
             } catch (err) {
                 console.error("Import error:", err);
                 alert("Import failed: " + err.message);
